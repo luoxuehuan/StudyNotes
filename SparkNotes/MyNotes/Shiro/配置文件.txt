@@ -1,0 +1,37 @@
+ <!-- Post processor that automatically invokes init() and destroy() methods -->  
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>  
+    <!-- 自定义角色过滤器 支持多个角色可以访问同一个资源 eg:/home.jsp = authc,roleOR[admin,user]  用户有admin或者user角色 就可以访问-->  
+     <bean id="roleOR" class="com.yale.app.security.OneRoleAuthorizationFilter"/>  
+    <!-- Define the Shiro Filter here (as a FactoryBean) instead of directly in web.xml -  
+         web.xml uses the DelegatingFilterProxy to access this bean.  This allows us  
+         to wire things with more control as well utilize nice Spring things such as  
+         PropertiesPlaceholderConfigurer and abstract beans or anything else we might need: -->  
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">  
+        <property name="securityManager" ref="securityManager"/>  
+        <property name="loginUrl" value="/page/login.jsp"/>  
+        <property name="successUrl" value="/page/index.jsp"/>  
+        <property name="unauthorizedUrl" value="/register/unauthorized"/>  
+        <!-- The 'filters' property is usually not necessary unless performing an override, which we  
+             want to do here (make authc point to a PassthruAuthenticationFilter instead of the  
+             default FormAuthenticationFilter: -->  
+        <property name="filters">  
+            <util:map>  
+                <entry key="authc">  
+                    <bean class="org.apache.shiro.web.filter.authc.PassThruAuthenticationFilter"/>  
+                </entry>  
+            </util:map>  
+        </property>  
+        
+        <property name="filterChainDefinitions">  
+            <value>  
+                /page/login.jsp = anon  
+                /page/register/* = anon  
+                /page/index.jsp = authc   
+                /page/addItem* = authc,roles[数据管理员]  
+                /page/file* = authc,roleOR[数据管理员,普通用户]  
+                /page/listItems* = authc,roleOR[数据管理员,普通用户]  
+                /page/showItem* = authc,roleOR[数据管理员,普通用户]  
+                /page/updateItem*=authc,roles[数据管理员]  
+            </value>  
+        </property>  
+    </bean>  
